@@ -13,7 +13,7 @@ class STLS1(object):
         # Create base packet and pad it to size
         #size = self.fsize; # HW will add 4 bytes ethernet FCS
         src_ip = '16.0.0.1'
-        dst_ip = '10.0.0.1'
+        dst_ip = '10.10.1.1'
         if direction:
             src_ip, dst_ip = dst_ip, src_ip
 
