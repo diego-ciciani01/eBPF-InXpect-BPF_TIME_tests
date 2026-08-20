@@ -103,7 +103,7 @@ static int prog_fd_by_nametag(char nametag[MAX_PROG_FULL_NAME])
             return -1;
         }
 
-        err = bpf_prog_get_info_by_fd(fd, &info, &len);
+        err = bpf_obj_get_info_by_fd(fd, &info, &len);
         if (err)
         {
             fprintf(stderr, "[%s]: can't get prog info by fd (%u): %s", ERR, id, strerror(errno));
@@ -133,7 +133,7 @@ static int psections__get_list(char psections_name_list[MAX_PSECTIONS][MAX_PROG_
     struct bpf_map_info info = {0};
     int info_len = sizeof(info);
 
-    int err = bpf_map_get_info_by_fd(fd, &info, &info_len);
+    int err = bpf_obj_get_info_by_fd(fd, &info, &info_len);
     if (err)
     {
         fprintf(stderr, "[%s]: during getting map rodata info: %s\n", ERR, strerror(errno));
@@ -209,7 +209,7 @@ static int multiplex__set_rate(int multiplex_rate)
     struct bpf_map_info info = {0};
     __u32 info_len = sizeof(info);
 
-    int err = bpf_map_get_info_by_fd(fd, &info, &info_len);
+    int err = bpf_obj_get_info_by_fd(fd, &info, &info_len);
     if (err)
     {
         fprintf(stderr, "[%s]: during getting map data info: %s\n", ERR, strerror(errno));
@@ -257,7 +257,7 @@ static int multiplex__set_num_counters(const __u8 num_counters)
     struct bpf_map_info info = {0};
     int info_len = sizeof(info);
 
-    int err = bpf_map_get_info_by_fd(fd, &info, &info_len);
+    int err = bpf_obj_get_info_by_fd(fd, &info, &info_len);
     if (err)
     {
         fprintf(stderr, "[%s]: during getting map data info: %s\n", ERR, strerror(errno));

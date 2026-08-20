@@ -29,7 +29,7 @@ int get_bss_map_fd(int prog_fd) {
 
   int err = -1;
   // needed to know the number of maps
-  if (bpf_prog_get_info_by_fd(prog_fd, &info, &len)) {
+  if (bpf_obj_get_info_by_fd(prog_fd, &info, &len)) {
     return err;
   }
 
@@ -44,7 +44,7 @@ int get_bss_map_fd(int prog_fd) {
   info2.nr_map_ids = num_maps;
   info2.map_ids = ptr_to_u64(map_ids);
 
-  if (bpf_prog_get_info_by_fd(prog_fd, &info2, &len2)) {
+  if (bpf_obj_get_info_by_fd(prog_fd, &info2, &len2)) {
     return err;
   }
 
@@ -57,7 +57,7 @@ int get_bss_map_fd(int prog_fd) {
       return err;
     }
 
-    err = bpf_map_get_info_by_fd(fd, &info_map, &len);
+    err = bpf_obj_get_info_by_fd(fd, &info_map, &len);
     if (err) {
       return err;
     }
@@ -80,7 +80,7 @@ int get_rodata_map_fd(int prog_fd) {
   struct bpf_prog_info info = {0};
   __u32 len = sizeof(info);
   // needed to know the number of maps
-  if (bpf_prog_get_info_by_fd(prog_fd, &info, &len)) {
+  if (bpf_obj_get_info_by_fd(prog_fd, &info, &len)) {
     return err;
   }
 
@@ -95,7 +95,7 @@ int get_rodata_map_fd(int prog_fd) {
   info2.nr_map_ids = num_maps; // needed otherwise map_ids is not filled
   info2.map_ids = ptr_to_u64(map_ids);
   // retrieve the map ids
-  if (bpf_prog_get_info_by_fd(prog_fd, &info2, &len)) {
+  if (bpf_obj_get_info_by_fd(prog_fd, &info2, &len)) {
     return err;
   }
 
@@ -108,7 +108,7 @@ int get_rodata_map_fd(int prog_fd) {
       return err;
     }
 
-    err = bpf_map_get_info_by_fd(fd, &info_map, &len);
+    err = bpf_obj_get_info_by_fd(fd, &info_map, &len);
     if (err) {
       return err;
     }
@@ -131,7 +131,7 @@ int get_data_map_fd(int prog_fd) {
   struct bpf_prog_info info = {0};
   __u32 len = sizeof(info);
   // needed to know the number of maps
-  if (bpf_prog_get_info_by_fd(prog_fd, &info, &len)) {
+  if (bpf_obj_get_info_by_fd(prog_fd, &info, &len)) {
     return err;
   }
 
@@ -146,7 +146,7 @@ int get_data_map_fd(int prog_fd) {
   info2.nr_map_ids = num_maps; // needed otherwise map_ids is not filled
   info2.map_ids = ptr_to_u64(map_ids);
   // retrieve the map ids
-  if (bpf_prog_get_info_by_fd(prog_fd, &info2, &len)) {
+  if (bpf_obj_get_info_by_fd(prog_fd, &info2, &len)) {
     return err;
   }
 
@@ -159,7 +159,7 @@ int get_data_map_fd(int prog_fd) {
       return err;
     }
 
-    err = bpf_map_get_info_by_fd(fd, &info_map, &len);
+    err = bpf_obj_get_info_by_fd(fd, &info_map, &len);
     if (err) {
       return err;
     }
