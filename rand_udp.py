@@ -13,7 +13,7 @@ class STLS1(object):
         # Create base packet and pad it to size
         #size = self.fsize; # HW will add 4 bytes ethernet FCS
         src_ip = '16.0.0.1'
-        dst_ip = '48.0.0.1'
+        dst_ip = '10.10.1.1'
         if direction:
             src_ip, dst_ip = dst_ip, src_ip
 
@@ -35,11 +35,11 @@ class STLS1(object):
 
             #funziona meglio
             STLVmFlowVar(name="ip_src", min_value="0.0.0.0", max_value="255.255.255.255", size=4, op="random"), # write ip to packet IP.src
-            STLVmFlowVar(name="ip_dst", min_value="0.0.0.0", max_value="255.255.255.255", size=4, op="random" ), # write ip to packet IP.dst
+            #STLVmFlowVar(name="ip_dst", min_value="0.0.0.0", max_value="255.255.255.255", size=4, op="random" ), # write ip to packet IP.dst
             STLVmFlowVar(name="src_port", min_value=1025, max_value=65000, size=2, op="random"),
             STLVmFlowVar(name="dst_port", min_value=1025, max_value=65000, size=2, op="random"),
             STLVmWrFlowVar(fv_name="ip_src", pkt_offset= "IP.src" ), # write ip to packet IP.src
-            STLVmWrFlowVar(fv_name="ip_dst", pkt_offset= "IP.dst" ), # write ip to packet IP.dst
+            #STLVmWrFlowVar(fv_name="ip_dst", pkt_offset= "IP.dst" ), # write ip to packet IP.dst
             STLVmWrFlowVar(fv_name="src_port", pkt_offset= "UDP.sport" ), # write ip to packet UDP.sport
             STLVmWrFlowVar(fv_name="dst_port", pkt_offset= "UDP.dport" ), # write ip to packet UDP.sport
 
