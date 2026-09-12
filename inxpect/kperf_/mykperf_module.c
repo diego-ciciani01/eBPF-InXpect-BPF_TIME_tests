@@ -24,7 +24,7 @@ MODULE_DESCRIPTION("A Dummy Kernel Module");
 
 #define MAX_DEV 1
 
-#define CAP_EVENT 0x530000
+#define CAP_EVENT 0x430000
 #define FIRST_MSR_EV_SELECT_REG 0x186
 #define MAX_MSR_PROG_REG 7
 #define FIRST_MSR_PROG_REG 0xC1
@@ -48,11 +48,11 @@ __bpf_kfunc __u64 bpf_mykperf__rdpmc(__u8 counter)
 }
 
 BTF_KFUNCS_START(bpf_task_set)
-BTF_ID_FLAGS(func, bpf_mykperf__rdpmc)
-BTF_ID_FLAGS(func, bpf_mykperf__fence)
-BTF_KFUNCS_END(bpf_task_set)
+    BTF_ID_FLAGS(func, bpf_mykperf__rdpmc)
+    BTF_ID_FLAGS(func, bpf_mykperf__fence)
+    BTF_KFUNCS_END(bpf_task_set)
 
-static const struct btf_kfunc_id_set bpf_task_kfunc_set = {
+     static const struct btf_kfunc_id_set bpf_task_kfunc_set = {
     .owner = THIS_MODULE,
     .set = &bpf_task_set,
 };
@@ -69,46 +69,46 @@ static long mykperf_ioctl(struct file *file, unsigned int cmd, unsigned long arg
     int err = 0;
     struct message msg = {0};
     switch (cmd)
-    {
-    case ENABLE_EVENT:
-        int r = -1;
-        if (copy_from_user(&msg, (__u64 *)arg, sizeof(struct message)))
         {
-            printk("Error copying data from user\n");
-            return -EFAULT;
-        }
+        case ENABLE_EVENT:
+            int r = -1;
+            if (copy_from_user(&msg, (__u64 *)arg, sizeof(struct message)))
+                {
+                    printk("Error copying data from user\n");
+                    return -EFAULT;
+                }
 
-        r = __enable_event(msg.event, msg.cpu);
-        if (r < 0)
-        {
-            printk("Error enabling event\n");
-            return -1;
-        }
+            r = __enable_event(msg.event, msg.cpu);
+            if (r < 0)
+                {
+                    printk("Error enabling event\n");
+                    return -1;
+                }
 
-        msg.reg = r;
+            msg.reg = r;
 
-        err = copy_to_user((uint32_t *)arg, &msg, sizeof(struct message));
-        if (err)
-        {
-            printk("Error copying data to user\n");
-            return -EFAULT;
-        }
-        break;
-    case DISABLE_EVENT:
-        if (copy_from_user(&msg, (__u64 *)arg, sizeof(struct message)))
-        {
-            printk("Error copying data from user\n");
-            return -EFAULT;
-        }
+            err = copy_to_user((uint32_t *)arg, &msg, sizeof(struct message));
+            if (err)
+                {
+                    printk("Error copying data to user\n");
+                    return -EFAULT;
+                }
+            break;
+        case DISABLE_EVENT:
+            if (copy_from_user(&msg, (__u64 *)arg, sizeof(struct message)))
+                {
+                    printk("Error copying data from user\n");
+                    return -EFAULT;
+                }
 
-        err = __disable_event(msg.reg, msg.event, msg.cpu);
-        if (err)
-        {
-            printk("Error disabling event\n");
-            return -1;
+            err = __disable_event(msg.reg, msg.event, msg.cpu);
+            if (err)
+                {
+                    printk("Error disabling event\n");
+                    return -1;
+                }
+            break;
         }
-        break;
-    }
     return err;
 }
 
@@ -116,41 +116,72 @@ static const struct file_operations mykperf_fops = {.owner = THIS_MODULE, .unloc
 
 static int __init mykperf_module_init(void)
 {
-    register_btf_kfunc_id_set(BPF_PROG_TYPE_XDP, &bpf_task_kfunc_set);
-    register_btf_kfunc_id_set(BPF_PROG_TYPE_TRACING, &bpf_task_kfunc_set);
-    int ret = 0;
-    //  ---- INIT CHAR DEV FOR IOCTL ----
+    int ret;
+    struct device *dev;
+
+    ret = register_btf_kfunc_id_set(
+                                    BPF_PROG_TYPE_XDP, &bpf_task_kfunc_set);
+    pr_info("register XDP kfunc ret=%d\n", ret);
+
+    ret = register_btf_kfunc_id_set(
+                                    BPF_PROG_TYPE_TRACING, &bpf_task_kfunc_set);
+    pr_info("register TRACING kfunc ret=%d\n", ret);
+
+    ret = register_btf_kfunc_id_set(
+                                    BPF_PROG_TYPE_SOCKET_FILTER, &bpf_task_kfunc_set);
+    pr_info("register SOCKET_FILTER kfunc ret=%d\n", ret);
+
     ret = alloc_chrdev_region(&dev_num, 0, 1, "inxpect-dev");
-    if (ret < 0)
-    {
-        printk(KERN_ERR "failed to alloc chrdev region\n");
+    if (ret < 0) {
+        pr_err("failed to alloc chrdev region: %d\n", ret);
         return ret;
     }
 
     mykperf_class = class_create("kinxpect");
-    if (IS_ERR(mykperf_class))
-    {
-        printk(KERN_ERR "failed to create class\n");
-        unregister_chrdev_region(dev_num, 1);
-        return PTR_ERR(mykperf_class);
-    }
-
-    cdev_init(&mykperf_cdev, &mykperf_fops);
-    mykperf_cdev.owner = THIS_MODULE;
-    ret = cdev_add(&mykperf_cdev, dev_num, 1);
-    if (ret < 0)
-    {
-        printk(KERN_ERR "failed to add cdev\n");
+    if (IS_ERR(mykperf_class)) {
+        ret = PTR_ERR(mykperf_class);
+        pr_err("failed to create class: %d\n", ret);
         unregister_chrdev_region(dev_num, 1);
         return ret;
     }
 
-    device_create(mykperf_class, NULL, dev_num, NULL, "kinxpect", MINOR(dev_num));
-    // --------------------------------------------------
+    cdev_init(&mykperf_cdev, &mykperf_fops);
+    mykperf_cdev.owner = THIS_MODULE;
 
-    pr_info("kfunc registerd with success\n");
+    ret = cdev_add(&mykperf_cdev, dev_num, 1);
+    if (ret < 0) {
+        pr_err("cdev_add failed: %d\n", ret);
+        class_destroy(mykperf_class);
+        unregister_chrdev_region(dev_num, 1);
+        return ret;
+    }
+
+    /* QUESTO MANCAVA */
+    dev = device_create(
+                        mykperf_class,
+                        NULL,
+                        dev_num,
+                        NULL,
+                        "kinxpect"
+                        );
+
+    if (IS_ERR(dev)) {
+        ret = PTR_ERR(dev);
+        pr_err("device_create failed: %d\n", ret);
+
+        cdev_del(&mykperf_cdev);
+        class_destroy(mykperf_class);
+        unregister_chrdev_region(dev_num, 1);
+
+        return ret;
+    }
+
+    pr_info("kinxpect device created successfully\n");
+    pr_info("kfunc registered with success\n");
+
     return 0;
 }
+
 
 struct enabled_events_list
 {
@@ -174,87 +205,74 @@ static void __add_event(__u64 reg, __u64 event, int cpu)
     return;
 }
 
-// return zero mean error
-static __u64 __enable_event(__u64 event, int cpu)
-{
-    __u32 r;
-    u64 val;
-    int err;
-    int _cpu = 0;
+event = CAP_EVENT | event;
 
-    // TODO : do this check on our event, and overwrite other events. This permit us to find the right register and having the same register for all cpus.
-    //  find a free register
-    for (r = FIRST_MSR_EV_SELECT_REG; r < (FIRST_MSR_EV_SELECT_REG + MAX_MSR_PROG_REG); r++)
-    {
-        if (cpu == -1)
-        {
-            for_each_online_cpu(_cpu)
-            {
-                err = rdmsrq_safe_on_cpu(_cpu, r, &val);
-                if (err)
-                {
-                    pr_err("Error reading MSR %x register on cpu %d: \n", r, _cpu, err);
-                    return -1;
-                }
+/* indice PMC associato al PERFEVTSEL scelto */
+__u64 output_reg = r - FIRST_MSR_EV_SELECT_REG;
 
-                // check if the register is free (zero)
-                if (val == 0)
-                {
-                    break;
-                }
-            }
-            // check if the register is free (zero)
-            if (val == 0)
-            {
-                break;
-            }
+if (cpu == -1) {
+    for_each_online_cpu(_cpu) {
+
+        /* disabilita prima l'evento */
+        err = wrmsrq_safe_on_cpu(_cpu, r, 0);
+        if (err) {
+            printk("Error disabling event on cpu %d: %d\n",
+                   _cpu, err);
+            return -1;
         }
-        else
-        {
-            err = rdmsrq_safe_on_cpu(cpu, r, &val);
-            if (err)
-            {
-                printk("Error reading MSR: %d\n", err);
-                return -1;
-            }
 
-            // check if the register is free (zero)
-            if (val == 0)
-            {
-                break;
-            }
+        /* azzera il PMC corrispondente */
+        err = wrmsrq_safe_on_cpu(
+                                 _cpu,
+                                 FIRST_MSR_PROG_REG + output_reg,
+                                 0
+                                 );
+        if (err) {
+            printk("Error resetting PMC on cpu %d: %d\n",
+                   _cpu, err);
+            return -1;
         }
-    }
 
-    event = CAP_EVENT | event; // add CAP_EVENT to event
-    if (cpu == -1)
-    {
-        for_each_online_cpu(_cpu)
-        {
-            err = wrmsrq_safe_on_cpu(_cpu, r, event);
-            if (err)
-            {
-                printk("Error writing MSR: %d on cpu: %d\n", err, _cpu);
-                return -1;
-            }
-        }
-    }
-    else
-    {
-        err = wrmsrq_safe_on_cpu(cpu, r, event);
-        if (err)
-        {
-            printk("Error writing MSR: %d\n", err);
+        /* abilita il nuovo evento */
+        err = wrmsrq_safe_on_cpu(_cpu, r, event);
+        if (err) {
+            printk("Error writing MSR on cpu %d: %d\n",
+                   _cpu, err);
             return -1;
         }
     }
+ } else {
 
-    __add_event(r, event, cpu);
+    /* disabilita prima l'evento */
+    err = wrmsrq_safe_on_cpu(cpu, r, 0);
+    if (err) {
+        printk("Error disabling event: %d\n", err);
+        return -1;
+    }
 
-    // index register used to store PMC value
-    __u64 output_reg = r - FIRST_MSR_EV_SELECT_REG;
-    return output_reg;
-}
+    /* azzera il PMC */
+    err = wrmsrq_safe_on_cpu(
+                             cpu,
+                             FIRST_MSR_PROG_REG + output_reg,
+                             0
+                             );
+    if (err) {
+        printk("Error resetting PMC: %d\n", err);
+        return -1;
+    }
+
+    /* abilita il nuovo evento */
+    err = wrmsrq_safe_on_cpu(cpu, r, event);
+    if (err) {
+        printk("Error writing MSR: %d\n", err);
+        return -1;
+    }
+ }
+
+__add_event(r, event, cpu);
+
+return output_reg;
+
 
 static int __disable_event(__u64 reg, __u64 event, int cpu)
 {
@@ -262,35 +280,35 @@ static int __disable_event(__u64 reg, __u64 event, int cpu)
     int err;
     struct enabled_events_list *temp;
     list_for_each_entry(temp, &head, list)
-    {
-        if (temp->event == event && temp->reg == reg + FIRST_MSR_EV_SELECT_REG && temp->cpu == cpu)
         {
-            if (cpu == -1)
-            {
-                for_each_online_cpu(cpu)
+            if (temp->event == event && temp->reg == reg + FIRST_MSR_EV_SELECT_REG && temp->cpu == cpu)
                 {
-                    err = wrmsrq_safe_on_cpu(cpu, temp->reg, 0);
-                    if (err)
-                    {
-                        printk("Error writing MSR: %d\n", err);
-                        return -1;
-                    }
+                    if (cpu == -1)
+                        {
+                            for_each_online_cpu(cpu)
+                                {
+                                    err = wrmsrq_safe_on_cpu(cpu, temp->reg, 0);
+                                    if (err)
+                                        {
+                                            printk("Error writing MSR: %d\n", err);
+                                            return -1;
+                                        }
+                                }
+                        }
+                    else
+                        {
+                            err = wrmsrq_safe_on_cpu(cpu, temp->reg, 0);
+                            if (err)
+                                {
+                                    printk("Error writing MSR: %d\n", err);
+                                    return -1;
+                                }
+                        }
+                    list_del(&temp->list);
+                    kfree(temp);
+                    return 0;
                 }
-            }
-            else
-            {
-                err = wrmsrq_safe_on_cpu(cpu, temp->reg, 0);
-                if (err)
-                {
-                    printk("Error writing MSR: %d\n", err);
-                    return -1;
-                }
-            }
-            list_del(&temp->list);
-            kfree(temp);
-            return 0;
         }
-    }
     return 0;
 }
 
@@ -299,10 +317,10 @@ static void __exit mykperf_module_exit(void)
     // free all the nodes in the list
     struct enabled_events_list *temp, *next;
     list_for_each_entry_safe(temp, next, &head, list)
-    {
-        list_del(&temp->list);
-        kfree(temp);
-    }
+        {
+            list_del(&temp->list);
+            kfree(temp);
+        }
 
     // ---- CLEANUP CHARDEV ----
     device_destroy(mykperf_class, dev_num);
