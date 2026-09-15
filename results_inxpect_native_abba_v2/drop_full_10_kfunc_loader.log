@@ -1,0 +1,1 @@
+READY workload=drop prog_id=20370 prog_name=drop_kfunc pin=/sys/fs/bpf/multiplexed_output

@@ -1,0 +1,1 @@
+READY workload=nat prog_id=19138 prog_name=nat_ninx pin=/sys/fs/bpf/multiplexed_output

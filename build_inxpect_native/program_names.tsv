@@ -1,0 +1,6 @@
+workload	mode	kfunc_prog	native_prog
+drop	full	drop_kfunc	drop_ninx
+cms	full	cms_kfunc	cms_ninx
+nat	full	xdp_nat_kfunc	nat_ninx
+routing	full	lpmtrie_kfunc	route_ninx
+tunnel	full	tunnel_kfunc	tunnel_ninx

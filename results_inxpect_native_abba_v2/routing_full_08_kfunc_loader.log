@@ -1,0 +1,2 @@
+[MAP] routing LPM ready: 920773 entries
+READY workload=routing prog_id=22482 prog_name=lpmtrie_kfunc pin=/sys/fs/bpf/multiplexed_output

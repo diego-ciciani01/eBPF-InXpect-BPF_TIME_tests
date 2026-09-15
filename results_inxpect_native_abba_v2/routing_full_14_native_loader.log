@@ -1,0 +1,2 @@
+[MAP] routing LPM ready: 920773 entries
+READY workload=routing prog_id=22746 prog_name=route_ninx pin=/sys/fs/bpf/multiplexed_output

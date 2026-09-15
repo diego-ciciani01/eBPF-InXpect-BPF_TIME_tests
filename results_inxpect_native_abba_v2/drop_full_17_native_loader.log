@@ -1,0 +1,1 @@
+READY workload=drop prog_id=20678 prog_name=drop_ninx pin=/sys/fs/bpf/multiplexed_output

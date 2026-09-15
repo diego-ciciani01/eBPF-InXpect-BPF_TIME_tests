@@ -1,0 +1,4 @@
+Enabling event 3c
+main
+   cycles: 15436866137   238.92/pkt - 64611913 run_cnt
+Disabling event 3c on cpu -1 from reg: 0

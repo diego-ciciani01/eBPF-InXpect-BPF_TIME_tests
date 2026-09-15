@@ -1,0 +1,1 @@
+READY workload=cms prog_id=16674 prog_name=cms_kfunc pin=/sys/fs/bpf/multiplexed_output

@@ -1,0 +1,1 @@
+READY workload=tunnel prog_id=23934 prog_name=tunnel_ninx pin=/sys/fs/bpf/multiplexed_output

@@ -1,0 +1,1 @@
+READY workload=nat prog_id=19314 prog_name=xdp_nat_kfunc pin=/sys/fs/bpf/multiplexed_output
